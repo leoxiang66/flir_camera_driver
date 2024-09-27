@@ -46,6 +46,7 @@ public:
   ~Camera();
 
   bool start();
+  bool setExposureTime(double exposureTime);
   bool stop();
   void setSynchronizer(const std::shared_ptr<Synchronizer> & s) { synchronizer_ = s; }
   void setExposureController(const std::shared_ptr<ExposureController> & e)
@@ -56,6 +57,7 @@ public:
   const std::string & getPrefix() const { return (prefix_); }
 
 private:
+double defaultExposureTime_{2000.0}; // 默认曝光时间，单位为微秒
   struct NodeInfo
   {
     enum NodeType { INVALID, ENUM, FLOAT, INT, BOOL, COMMAND };
@@ -64,6 +66,7 @@ private:
     NodeType type{INVALID};
     rcl_interfaces::msg::ParameterDescriptor descriptor;
   };
+  bool setExposureTimeImpl(const std::string & nodeName, double exposureTime);
   void processImage(const ImageConstPtr & image);
   void readParameters();
   void printCameraInfo();
