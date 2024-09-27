@@ -107,7 +107,8 @@ example_parameters = {
         'dump_node_map': False,
         # set parameters defined in grasshopper.yaml
         'gain_auto': 'Continuous',
-        'exposure_auto': 'Continuous',
+        'exposure_auto': 'Off',
+        'exposure_time': 1000.0,
         'frame_rate_auto': 'Off',
         'frame_rate': 100.0,
         'trigger_mode': 'Off',
