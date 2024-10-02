@@ -223,7 +223,7 @@ void Camera::readParameters()
   acquisitionTimeout_ = safe_declare<double>(prefix_ + "acquisition_timeout", 3.0);
   parameterFile_ = safe_declare<std::string>(prefix_ + "parameter_file", "parameters.yaml");
   connectWhileSubscribed_ = safe_declare<bool>(prefix_ + "connect_while_subscribed", false);
-  enableExternalControl_ = safe_declare<bool>(prefix_ + "enable_external_control", true);
+  enableExternalControl_ = safe_declare<bool>(prefix_ + "enable_external_control", false);
   callbackHandle_ = node_->add_on_set_parameters_callback(
     std::bind(&Camera::parameterChanged, this, std::placeholders::_1));
 }
@@ -439,7 +439,6 @@ rcl_interfaces::msg::SetParametersResult Camera::parameterChanged(
 
 void Camera::controlCallback(const flir_camera_msgs::msg::CameraControl::UniquePtr msg)
 {
-  LOG_INFO("正在尝试更改exposure time...")
   const uint32_t et = msg->exposure_time;
   const float gain = msg->gain;
   bool logTime(false);
@@ -662,30 +661,6 @@ void Camera::startCamera()
   }
 }
 
-bool Camera::setExposureTimeImpl(const std::string & nodeName, double exposureTime) {
-    double retExposureTime;
-    std::string msg = wrapper_->setDouble(nodeName, exposureTime, &retExposureTime);
-    if (msg != "OK") {
-        RCLCPP_ERROR(get_logger(), "Failed to set exposure time: %s", msg.c_str());
-        return false;
-    }
-    RCLCPP_INFO(get_logger(), "Exposure time set to %f microseconds", retExposureTime);
-    return true;
-}
-
-bool Camera::setExposureTime(double exposureTime) {
-    const auto it = parameterMap_.find(prefix_ + "exposure_time");
-    if (it == parameterMap_.end()) {
-        RCLCPP_WARN(get_logger(), "Exposure time parameter not defined, check configuration.");
-        return false;
-    }
-
-    const auto & ni = it->second;
-    return setExposureTimeImpl(ni.name, exposureTime);
-}
-
-
-
 bool Camera::start()
 {
   readParameters();
@@ -701,7 +676,6 @@ bool Camera::start()
   infoManager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
     node_, name_.empty() ? node_->get_name() : name_, cameraInfoURL_);
   if (enableExternalControl_) {
-    LOG_INFO("Enabled external control");
     controlSub_ = node_->create_subscription<flir_camera_msgs::msg::CameraControl>(
       "~/" + topicPrefix_ + "control", 10,
       std::bind(&Camera::controlCallback, this, std::placeholders::_1));
@@ -755,15 +729,6 @@ bool Camera::start()
     // Some parameters (like blackfly s chunk control) cannot be set once
     // the camera is running.
     createCameraParameters();
-
-    // Set default exposure time after initializing the camera and before starting acquisition
-    if (!setExposureTime(defaultExposureTime_)) {
-      LOG_INFO("Failed to set default exposure time.");
-    }
-    else{
-      LOG_INFO("Successfully set default exposure time.");
-    }
-
     if (!connectWhileSubscribed_) {
       startCamera();
     } else {
