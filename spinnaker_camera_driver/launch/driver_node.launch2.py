@@ -102,14 +102,15 @@ example_parameters = {
         'chunk_enable_timestamp': True,
     },
     'grasshopper': {
-        'debug': False,
+        'debug': True,
         'compute_brightness': False,
         'dump_node_map': False,
         # set parameters defined in grasshopper.yaml
         'gain_auto': 'Continuous',
-        'exposure_auto': 'Continuous',
+        'exposure_auto': 'Off',
+        'exposure_time':500.0,
         'frame_rate_auto': 'Off',
-        'frame_rate': 100.0,
+        'frame_rate': 60.0,
         'trigger_mode': 'Off',
         'chunk_mode_active': True,
         'chunk_selector_frame_id': 'FrameID',
